@@ -43,6 +43,24 @@ var ImageModel = Backbone.Model.extend({
         }.bind(this));
     },
 
+    isRGBImage: function() {
+        // returns True if the all currently *active* channels are 'unmixed'
+        // (are either red, green or blue) and not 2 same color
+        var rgb = ['FF0000', '00FF00', '0000FF'];
+        // rgbColors is list of colors or False if not rgb.
+        var rgbColors = this.get('channels').reduce(function(prev, ch, i){
+            console.log(prev, ch, i);
+            if (!prev || !ch.active) return prev;
+            if (prev.indexOf(ch.color) > -1) return false;
+            if (rgb.indexOf(ch.color) === -1) return false;
+            prev.push(ch.color);
+            return prev;
+        }, []);
+        console.log('rgbColors', rgbColors);
+        // cast list of colors (or false) to boolean
+        return !!rgbColors;
+    },
+
     refreshImage: function() {
 
         // replace 'loadedChannels' with 'channels' 
@@ -70,6 +88,8 @@ var ImageModel = Backbone.Model.extend({
 
     setChannelWindow: function(idx, start, end) {
         console.log('setChannelWindow', start, end);
+        if (!this.isRGBImage()) return;
+
         var oldChs = this.get('channels');
         // Need to clone the list of channels...
         var chs = [];
